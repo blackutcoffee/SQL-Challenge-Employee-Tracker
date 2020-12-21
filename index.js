@@ -1,6 +1,12 @@
 const cTable = require("console.table");
 const mysql = require("mysql");
 const inquirer = require("inquirer");
+const connection = require("./tcp/connection.js")
+const { prompt } = require("inquirer");
+const logo = require("asciiart-logo");
+// const db = require("./db");
+require("console.table");
+
 
 let departmentArray = [];
 let departmentIdArray = [];
@@ -10,13 +16,13 @@ let roleArray = [];
 let roleIdArray = [];
 let managerArray = [];
 let managerIdArray = [];
-const connection = mysql.createConnection({
-  host: "localhost",
-  port: 3306,
-  user: "root",
-  password: "placeyourpassword",
-  database: "placeyourdatabasename",
-});
+// const connection = mysql.createConnection({
+//   host: "localhost",
+//   port: 3306,
+//   user: "root",
+//   password: "P@$$w0rdP@$$w0rd",
+//   database: "employees",
+// });
 const menu = [
   "View all employees",
   "View employees by department",
@@ -26,6 +32,42 @@ const menu = [
   "Update employee role",
   "Update employee manager",
   "Add manager",
+  "Remove manager",
+  "View roles",
+  "Add role",
+  "Remove role",
+  "View departments",
+  "Add department",
+  "Remove department",
+];
+ roleArray = [
+    "intern",
+    "manager",
+    "torts",
+    "evidence",
+    "civil pro",
+    "due process",
+    "subpeo",
+    "barrister",
+    "Remove manager",
+    "View roles",
+    "Add role",
+    "Remove role",
+    "View departments",
+    "Add department",
+    "Remove department",
+  ];
+
+  
+  departmentArray = [
+    "hr",
+    "admin",
+  "salesforce",
+  "research adn development",
+  "civil pro",
+  "due process",
+  "subpeo",
+  "barrister",
   "Remove manager",
   "View roles",
   "Add role",
@@ -101,7 +143,7 @@ addManager = function (answer) {
 };
 getEmployees = function () {
   connection.query(
-    "SELECT employee.id, employee.first_name, employee.last_name, role.title, department.department, role.salary, manager.manager FROM (((employee left join role on employee.role_id=role.id) left join department on role.department_id = department.id) left join manager on employee.manager_id=manager.id) order by employee.id",
+    "SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name, role.salary, manager.id FROM (((employee left join role on employee.role_id=role.id) left join department on role.department_id = department.id) left join manager on employee.manager_id=manager.id) order by employee.id",
     function (err, result) {
       if (err) throw err;
       console.table(result);
@@ -111,7 +153,7 @@ getEmployees = function () {
 };
 getEmployeesByDepartment = function (answer) {
   connection.query(
-    "SELECT employee.id, employee.first_name, employee.last_name, role.title, department.department, role.salary, manager.manager FROM (((employee left join role on employee.role_id=role.id) left join department on role.department_id = department.id) left join manager on employee.manager_id=manager.id) where department.department = ? order by employee.id",
+    "SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name, role.salary, manager.id FROM (((employee left join role on employee.role_id=role.id) left join department on role.department_id = department.id) left join manager on employee.manager_id=manager.id) where department.name = ? order by employee.id",
     [answer.name],
     function (err, result) {
       if (err) throw err;
@@ -121,12 +163,12 @@ getEmployeesByDepartment = function (answer) {
 };
 getEmployeesByManager = function (answer) {
   connection.query(
-    "SELECT manager.id FROM manager WHERE manager.manager = ?",
+    "SELECT manager.id FROM manager WHERE manager.id = ?",
     [answer.name],
     function (err, result) {
       if (err) throw err;
       connection.query(
-        "SELECT employee.id, employee.first_name, employee.last_name, role.title, department.department, role.salary, manager.manager FROM (((employee left join role on employee.role_id=role.id) left join department on role.department_id = department.id) left join manager on employee.manager_id=manager.id) where employee.manager_id = ?",
+        "SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name, role.salary, manager.id FROM (((employee left join role on employee.role_id=role.id) left join department on role.department_id = department.id) left join manager on employee.manager_id=manager.id) where employee.manager_id = ?",
         [result[0].id],
         function (err, result) {
           if (err) throw err;
@@ -327,6 +369,10 @@ async function addManagerQuery() {
     choices: employeeArray,
   });
 }
+
+
+
+
 async function removeManagerQuery() {
   managerArray.shift();
   return inquirer.prompt({
@@ -452,11 +498,13 @@ async function backToMain() {
   }
 }
 async function init() {
-  renderEmployees();
-  renderRoles();
-  renderDepartments();
-  renderManagers();
+    
+//   renderEmployees();
+//   renderRoles();
+//   renderDepartments();
+//   renderManagers();
   let first = await mainPrompt();
+//   console.log(first)
   if (first.choice === menu[0]) {
     getEmployees();
   } else if (first.choice === menu[1]) {
@@ -502,6 +550,6 @@ async function init() {
   }
   setTimeout(function () {
     backToMain();
-  }, 500);
+  }, 5000);
 }
 init();

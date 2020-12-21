@@ -4,88 +4,55 @@ CREATE DATABASE employees;
 
 USE employees;
 
-CREATE TABLE department (
-  id INT AUTO_INCREMENT NOT NULL,
-  name VARCHAR(30) NOT NULL,
-  PRIMARY KEY(id)
+CREATE TABLE department(
+    id INT NOT NULL auto_increment,
+    names VARCHAR(30) NOT NULL,
+    PRIMARY KEY(id)
+);
+CREATE TABLE manager(
+	id INT NOT NULL AUTO_INCREMENT,
+    first_name VARCHAR(30) NOT NULL,
+    last_name VARCHAR(30) NOT NULL,
+    role_id INT,
+    primary key(id),
+    FOREIGN KEY (role_id) REFERENCES role(id)
 );
 
-INSERT INTO department (name)
-VALUES ("Sales");
-
-INSERT INTO department (name)
-VALUES ("Engineering");
-
-INSERT INTO department (name)
-VALUES ("Finance");
-
-INSERT INTO department (name)
-VALUES ("Legal");
-
-CREATE TABLE role (
-  id INT AUTO_INCREMENT NOT NULL,
-  title VARCHAR(30) NOT NULL,
-  salary DECIMAL(10,2) NOT NULL,
-  department_id INT NOT NULL,
-  PRIMARY KEY(id)
+CREATE TABLE role(
+    id INT NOT NULL auto_increment,
+    title VARCHAR(30) NOT NULL,
+    salary DECIMAL(10,2) NULL,
+    department_id INTEGER,
+    PRIMARY KEY(id),
+    CONSTRAINT fk_department FOREIGN KEY (department_id) REFERENCES department(id)
 );
-
-INSERT INTO role (title, salary, department_id)
-VALUES ("Sales Lead", 1100000, 1);
-
-INSERT INTO role (title, salary, department_id)
-VALUES ("Salesperson", 880000, 1);
-
-INSERT INTO role (title, salary, department_id)
-VALUES ("Lead Engineer", 1550000, 2);
-
-INSERT INTO role (title, salary, department_id)
-VALUES ("Software Engineer", 1220000, 2);
-
-INSERT INTO role (title, salary, department_id)
-VALUES ("Account Manager", 1660000, 3);
-
-INSERT INTO role (title, salary, department_id)
-VALUES ("Accountant", 1255000, 3);
-
-INSERT INTO role (title, salary, department_id)
-VALUES ("Legal Team Lead", 2550000, 4);
-
-INSERT INTO role (title, salary, department_id)
-VALUES ("Lawyer", 1990000, 4);
 
 CREATE TABLE employee (
-  id INT AUTO_INCREMENT NOT NULL,
+  id INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
   first_name VARCHAR(30) NOT NULL,
-  last_name VARCHAR(30) NOT NULL,
-  role_id iNT NOT NULL,
-  manager_id VARCHAR(30),
-  PRIMARY KEY(id)
-);
+  last_name VARCHAR(30) NULL,
+  role_id INTEGER NOT NULL,
+  CONSTRAINT fk_role_id FOREIGN KEY (role_id) REFERENCES role(id),
+  manager_id INTEGER NOT NULL,
+  CONSTRAINT fk_manager_id FOREIGN KEY (manager_id) REFERENCES department(id)
+-- );
+-- SELECT employee.first_name AS First_Name, employee.last_name AS Last_Name, roles.title AS Title, roles.salary AS Salary, departments.name AS Department FROM employee LEFT JOIN roles ON role_id LEFT JOIN departments ON department_id
 
-INSERT INTO employee (first_name, last_name, role_id, manager_id)
-VALUES ("John", "Clark", 1, null);
+-- -- Query for view all --
+-- SELECT e.id, e.first_name, e.last_name, d.name AS department, r.title, r.salary, CONCAT_WS(" ", m.first_name, m.last_name) AS manager FROM employee e LEFT JOIN employee m ON m.id = e.manager_id INNER JOIN role r ON e.role_id = r.id INNER JOIN department d ON r.department_id = d.id ORDER BY e.id ASC;
 
-INSERT INTO employee (first_name, last_name, role_id, manager_id)
-VALUES ("Mike", "Chan", 2, "John Doe");
+-- -- Query for view all roles --
+-- SELECT  r.id, r.title, r.salary, d.name as Department_Name FROM role AS r INNER JOIN department AS d ON r.department_id = d.id;
 
-INSERT INTO employee (first_name, last_name, role_id, manager_id)
-VALUES ("Ashley", "Clark", 3, null);
+-- --Query for getting employees --
+-- SELECT id, CONCAT_WS(' ', first_name, last_name) AS Employee_Name FROM employee
 
-INSERT INTO employee (first_name, last_name, role_id, manager_id)
-VALUES ("Kevin", "Tupik", 4, "Ashley Rodriguez");
+-- -- Query for updating --
+-- UPDATE employee SET role_id = 3 WHERE id = 8;
+-- UPDATE employee SET ? WHERE ?;
 
-INSERT INTO employee (first_name, last_name, role_id, manager_id)
-VALUES ("Kunal", "Singh", 5, null);
+-- -- Query for Delete --
+-- DELETE FROM department WHERE id = 13;
 
-INSERT INTO employee (first_name, last_name, role_id, manager_id)
-VALUES ("Malia", "Brown", 6, "Kunal Singh");
 
-INSERT INTO employee (first_name, last_name, role_id, manager_id)
-VALUES ("Sarah", "Lourd", 7, null);
 
-INSERT INTO employee (first_name, last_name, role_id, manager_id)
-VALUES ("Tom", "Allen", 8, "Sarah Lourde");
-
-INSERT INTO employee (first_name, last_name, role_id, manager_id)
-VALUES ("Hanna", "Lauth", 3, "Kevin Tupic");
