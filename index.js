@@ -4,7 +4,7 @@ const inquirer = require("inquirer");
 const connection = require("./tcp/connection.js")
 const { prompt } = require("inquirer");
 const logo = require("asciiart-logo");
-// const db = require("./db");
+
 require("console.table");
 
 
@@ -16,13 +16,7 @@ let roleArray = [];
 let roleIdArray = [];
 let managerArray = [];
 let managerIdArray = [];
-// const connection = mysql.createConnection({
-//   host: "localhost",
-//   port: 3306,
-//   user: "root",
-//   password: "P@$$w0rdP@$$w0rd",
-//   database: "employees",
-// });
+
 const menu = [
   "View all employees",
   "View employees by department",
@@ -84,52 +78,45 @@ connection.connect(function (err) {
   console.log("Connected as id " + connection.threadId);
 });
 
-addDepartment = function (answer) {
+
+const addDepartment = (data) => {
   connection.query(
-    "INSERT INTO department (department) VALUES (?)",
-    [answer.name],
-    function (err, result) {
+    `INSERT INTO department (name) VALUES (?)`,
+    [data.name],
+    (err, rows) => {
       if (err) throw err;
-      console.log(answer.name + " Has Been Added To Departments.");
+      console.table(rows);
     }
   );
 };
-addRole = function (answer) {
-  let departmentId =
-    departmentIdArray[departmentArray.indexOf(answer.department)];
+
+
+const addRole = (data) => {
+  let department_id = departmentArray.indexOf(data.department) + 1;
   connection.query(
-    "INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)",
-    [answer.name, answer.salary, departmentId],
-    function (err, result) {
+    `INSERT INTO role (title, department_id, salary) VALUES (?, ?, ?)`,
+    [data.name, department_id, parseInt(data.salary)],
+    (err, rows) => {
       if (err) throw err;
+      console.table(rows);
     }
   );
-  console.log(answer.name + " Has Been Added To Roles.");
 };
-addEmployee = function (answer) {
-  let managerId;
-  if (answer.manager != "null") {
-    managerId = managerIdArray[managerArray.indexOf(answer.manager) - 1];
-  } else {
-    managerId = null;
-  }
-  let roleId = roleIdArray[roleArray.indexOf(answer.role)];
+
+const addEmployee = (data) => {
+  let roleId = roleArray.indexOf(data.role) + 1;
+  let managerId = managerArray.indexOf(data.manager) + 1;
+
   connection.query(
-    "INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)",
-    [answer.first_name, answer.last_name, roleId, managerId],
-    function (err, result) {
+    `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?,?,?,?)`,
+    [data.first_name, data.last_name, roleId, managerId],
+    (err, rows) => {
       if (err) throw err;
+      console.table(rows);
     }
   );
-  console.log(
-    answer.first_name +
-      " " +
-      answer.last_name +
-      " the " +
-      answer.role +
-      " Was Added To The Database!"
-  );
 };
+
 addManager = function (answer) {
   let employeeId = employeeIdArray[employeeArray.indexOf(answer.name)];
   connection.query(
@@ -141,16 +128,26 @@ addManager = function (answer) {
   );
   console.log(answer.name + " Is A Manager!");
 };
-getEmployees = function () {
+
+
+const getEmployees = () => {
   connection.query(
-    "SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name, role.salary, manager.id FROM (((employee left join role on employee.role_id=role.id) left join department on role.department_id = department.id) left join manager on employee.manager_id=manager.id) order by employee.id",
-    function (err, result) {
+    `SELECT employee.id, employee.first_name, employee.last_name, 
+    role.title, role.salary,
+    manager.first_name AS manager_first, manager.last_name AS manager_last 
+    FROM employee
+    LEFT JOIN role
+    ON employee.id = role_id
+    LEFT JOIN manager
+    ON employee.manager_id = manager.id`,
+    (err, rows) => {
       if (err) throw err;
-      console.table(result);
-      return result;
+      console.table(rows);
     }
   );
 };
+
+
 getEmployeesByDepartment = function (answer) {
   connection.query(
     "SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name, role.salary, manager.id FROM (((employee left join role on employee.role_id=role.id) left join department on role.department_id = department.id) left join manager on employee.manager_id=manager.id) where department.name = ? order by employee.id",
