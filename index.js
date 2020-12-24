@@ -55,7 +55,7 @@ const menu = [
   
   departmentArray = [
     "hr",
-    "admin",
+  "admin",
   "salesforce",
   "research adn development",
   "civil pro",
@@ -149,8 +149,15 @@ const getEmployees = () => {
 
 
 getEmployeesByDepartment = function (answer) {
+  console.log(answer)
   connection.query(
-    "SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name, role.salary, manager.id FROM (((employee left join role on employee.role_id=role.id) left join department on role.department_id = department.id) left join manager on employee.manager_id=manager.id) where department.name = ? order by employee.id",
+    `SELECT employee.id, employee.first_name, 
+    employee.last_name, role.title, 
+    department.name AS department, role.salary, manager.id 
+    FROM employee left join role on employee.role_id=role.id
+     left join department ON role.department_id = department.id
+      LEFT join manager ON employee.manager_id=manager.id`, 
+
     [answer.name],
     function (err, result) {
       if (err) throw err;
@@ -303,13 +310,7 @@ renderDepartments = function () {
   departmentArray = [];
   departmentIdArray = [];
   query = "select * from department";
-  connection.query(query, function (err, res) {
-    if (err) throw err;
-    for (var i = 0; i < res.length; i++) {
-      departmentArray.push(res[i].department);
-      departmentIdArray.push(res[i].id);
-    }
-  });
+ return connection.promise().query(query);
 };
 renderManagers = function () {
   managerArray = ["null"];
@@ -405,13 +406,22 @@ async function addEmployeeQuery() {
     },
   ]);
 }
+
+
 async function getByDepartmentQuery() {
-  return inquirer.prompt({
-    type: "list",
-    name: "name",
-    message: "Which DEPARTMENT would you like to view?",
-    choices: departmentArray,
-  });
+  renderDepartments().then(results => {
+    // departmentArray.push    
+    
+departmentArray = results[0].map(res => res.name);
+    console.log(results);
+    return inquirer.prompt({
+      type: "list",
+      name: "name",
+      message: "Which DEPARTMENT would you like to view?",
+      choices: departmentArray,
+    });
+  }); 
+  
 }
 async function getByManagerQuery() {
   managerArray.shift();
