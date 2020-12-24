@@ -4,18 +4,16 @@ const inquirer = require("inquirer");
 const connection = require("./tcp/connection.js")
 const { prompt } = require("inquirer");
 const logo = require("asciiart-logo");
-
+const figlet = require("figlet");
 require("console.table");
 
 
 let departmentArray = [];
-let departmentIdArray = [];
 let employeeArray = [];
-let employeeIdArray = [];
 let roleArray = [];
-let roleIdArray = [];
 let managerArray = [];
-let managerIdArray = [];
+
+let employees = 'Employee Tracker'
 
 const menu = [
   "View all employees",
@@ -70,13 +68,60 @@ const menu = [
   "Add department",
   "Remove department",
 ];
-connection.connect(function (err) {
-  if (err) {
-    console.error("error connecting: " + err.stack);
-    return;
-  }
-  console.log("Connected as id " + connection.threadId);
+
+// connect
+connection.connect((err) => {
+  if (err) throw err;
 });
+
+afterConnection = (res, rej) => {
+  queryBank();
+
+  figlet(`${employees}`, function (err, data) {
+    if (err) {
+      rej("Ooops...");
+    }
+    console.log(data);
+    res("Sucessful!");
+  });
+};
+
+
+  const queryBank = () => {
+    connection.query(`SELECT * FROM manager`, (err, rows) => {
+      if (err) throw err;
+      rows.map((el) => {
+        managerArray.push(`${el.first_name} ${el.last_name}`);
+      });
+    });
+    connection.query(`SELECT * FROM role`, (err, rows) => {
+      if (err) throw err;
+      rows.map((el) => {
+        roleArray.push(el.role);
+      });
+    });
+    connection.query(`SELECT * FROM department`, (err, rows) => {
+      if (err) throw err;
+      rows.map((el) => {
+        departmentArray.push(el.name);
+      });
+    });
+    connection.query(`SELECT first_name, last_name FROM employee`, (err, rows) => {
+      if(err) throw err;
+      rows.map((el) => {
+        employeeArray.push(`${el.first_name} ${el.last_name}`)
+      })
+    })
+  };
+
+
+// connection.connect(function (err) {
+//   if (err) {
+//     console.error("error connecting: " + err.stack);
+//     return;
+//   }
+//   console.log("Connected as id " + connection.threadId);
+// });
 
 
 const addDepartment = (data) => {
@@ -199,20 +244,41 @@ updateEmployeeManager = function (answer) {
     }
   );
 };
-updateEmployeeRole = function (answer) {
-  let employeeId = employeeIdArray[employeeArray.indexOf(answer.name)];
-  let roleId = roleIdArray[roleArray.indexOf(answer.role)];
-  connection.query(
-    "UPDATE employee SET role_id = ? WHERE id= ?",
-    [roleId, employeeId],
-    function (err, result) {
-      if (err) throw err;
-      else {
-        console.log(answer.name + "'s Role Has Been Updated!");
-      }
-    }
-  );
-};
+
+
+const updateEmployeeRole  = (data) => {
+  employeeId = employeeArray.indexOf(data.employee) +1;
+  roleId = roleArray.indexOf(data.new_role) + 1;
+  connection.query(`UPDATE employees SET role_id = ? WHERE employee.id = ?`, [roleId, employeeId], (err, rows) => {
+    console.table(rows)
+  })
+}
+
+// updateEmployeeRole = function (answer) {
+//   let employeeId = employeeIdArray[employeeArray.indexOf(answer.name)];
+//   let roleId = roleIdArray[roleArray.indexOf(answer.role)];
+//   connection.query(
+//     "UPDATE employee SET role_id = ? WHERE id= ?",
+//     [roleId, employeeId],
+//     function (err, result) {
+//       if (err) throw err;
+//       else {
+//         console.log(answer.name + "'s Role Has Been Updated!");
+//       }
+//     }
+//   );
+// };
+
+
+
+
+
+
+
+
+
+
+
 removeEmployee = function (answer) {
   let employeeId = employeeIdArray[employeeArray.indexOf(answer.name)];
   connection.query(
@@ -275,13 +341,26 @@ getManagers = function () {
     }
   );
 };
-getDepartments = function () {
-  connection.query("SELECT * FROM department", function (err, result) {
+
+
+
+
+
+
+const getDepartments = () => {
+  connection.query("SELECT * FROM department", (err, rows) => {
     if (err) throw err;
-    console.table(result);
-    return result;
+    console.table(rows);
   });
 };
+
+// getDepartments = function () {
+//   connection.query("SELECT * FROM department", function (err, result) {
+//     if (err) throw err;
+//     console.table(result);
+//     return result;
+//   });
+// };
 renderEmployees = function () {
   employeeArray = [];
   employeeIdArray = [];
@@ -559,4 +638,5 @@ async function init() {
     backToMain();
   }, 5000);
 }
+
 init();
