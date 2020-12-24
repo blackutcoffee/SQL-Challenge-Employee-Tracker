@@ -53,6 +53,3 @@ CREATE TABLE employee (
 
 -- -- Query for Delete --
 -- DELETE FROM department WHERE id = 13;
-
-
-
